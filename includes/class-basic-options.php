@@ -6,7 +6,7 @@
  * @package WooCommerce_Phone_Validation
  */
 
-
+require_once dirname( __FILE__ ) . '/../vendor/cmb2/init.php';
 
 /**
  * WooCommerce Phone Validation Basic Options class.
@@ -76,78 +76,110 @@ class WCPV_Basic_Options {
 	public function hooks() {
 
 		// Hook in our actions to the admin.
-		
-		add_action( 'cmb2_admin_init', array( $this, 'add_options_page_metabox' ) );
-		
-	}
 
-	/**
-	 * Add custom fields to the options page.
-	 *
-	 * @since  0.0.1
-	 */
-	public function add_options_page_metabox() {
-
-		// Add our CMB2 metabox.
-		$cmb = new_cmb2_box( array(
-			'id'           => self::$metabox_id,
-			'title'        => $this->title,
-			'object_types' => array( 'options-page' ),
-
-			/*
-			 * The following parameters are specific to the options-page box
-			 * Several of these parameters are passed along to add_menu_page()/add_submenu_page().
-			 */
-
-			'option_key'   => self::$key, // The option key and admin menu page slug.
-			// 'icon_url'        => 'dashicons-palmtree', // Menu icon. Only applicable if 'parent_slug' is left empty.
-			// 'menu_title'      => esc_html__( 'Options', 'cmb2' ), // Falls back to 'title' (above).
-			// 'parent_slug'     => 'themes.php', // Make options page a submenu item of the themes menu.
-			// 'capability'      => 'manage_options', // Cap required to view options-page.
-			// 'position'        => 1, // Menu position. Only applicable if 'parent_slug' is left empty.
-			// 'admin_menu_hook' => 'network_admin_menu', // 'network_admin_menu' to add network-level options page.
-			// 'display_cb'      => false, // Override the options-page form output (CMB2_Hookup::options_page_output()).
-			// 'save_button'     => esc_html__( 'Save Theme Options', 'cmb2' ), // The text for the options-page save button. Defaults to 'Save'.
-		) );
-
-		// Add your fields here.
-		$cmb->add_field( array(
-			'name'    => __( 'Test Text', 'woocommerce-phone-validation' ),
-			'desc'    => __( 'field description (optional)', 'woocommerce-phone-validation' ),
-			'id'      => 'test_text', // No prefix needed.
-			'type'    => 'text',
-			'default' => __( 'Default Text', 'woocommerce-phone-validation' ),
-		) );
+		add_action( 'admin_menu', array( $this, 'create_settings' ) );
+		add_action( 'admin_init', array( $this, 'setup_sections' ) );
+		add_action( 'admin_init', array( $this, 'setup_fields' ) );
+		add_filter('plugin_action_links_' . $this->plugin->basename, [$this,'action_links']);
 
 	}
 
-	/**
-	 * Wrapper function around cmb2_get_option.
-	 *
-	 * @since  0.0.1
-	 *
-	 * @param  string $key     Options array key
-	 * @param  mixed  $default Optional default value
-	 * @return mixed           Option value
-	 */
-	public static function get_value( $key = '', $default = false ) {
-		if ( function_exists( 'cmb2_get_option' ) ) {
+	public function action_links($links){
 
-			// Use cmb2_get_option as it passes through some key filters.
-			return cmb2_get_option( self::$key, $key, $default );
+		$links[] = '<a href="' . admin_url( 'admin.php?page=phone_validation_options' ) . '">Settings</a>';
+
+		return $links;
+	}
+
+	public function create_settings() {
+		$page_title = 'Phone Validation Options';
+		$menu_title = 'Phone Validation';
+		$capability = 'manage_options';
+		$slug = 'phone_validation_options';
+		$callback = array($this, 'settings_content');
+
+		add_submenu_page('woocommerce',$page_title,$menu_title,$capability,$slug,$callback);
+	}
+	public function settings_content() { ?>
+		<div class="wrap">
+			<h1>Phone Validation Options</h1>
+			<?php settings_errors(); ?>
+			<form method="POST" action="options.php">
+				<?php
+					settings_fields( 'phone_validation_options' );
+					do_settings_sections( 'phone_validation_options' );
+					submit_button();
+				?>
+			</form>
+		</div> <?php
+	}
+	public function setup_sections() {
+		add_settings_section( 'phone_validation_options_section', 'Phone Validation Options', array(), 'phone_validation_options' );
+	}
+	public function setup_fields() {
+		$fields = array(
+			array(
+				'label' => 'Enable Numverify',
+				'id' => 'numverify',
+				'type' => 'checkbox',
+				'section' => 'phone_validation_options_section',
+				'options' => array(
+					'Yes' => 'Yes',
+				),
+				'desc' => 'Use Numverify service to validate that phone numbers entered are real ',
+			),
+			[
+				'label' =>'Numverify api key',
+				'id'=>'numverify_key',
+				'type'=>'text',
+				'section' => 'phone_validation_options_section'
+			]
+		);
+		foreach( $fields as $field ){
+			add_settings_field( $field['id'], $field['label'], array( $this, 'field_callback' ), 'phone_validation_options', $field['section'], $field );
+			register_setting( 'phone_validation_options', $field['id'] );
 		}
+	}
 
-		// Fallback to get_option if CMB2 is not loaded yet.
-		$opts = get_option( self::$key, $default );
+	public static function is_active(){
+		$option = get_option('numverify');
 
-		$val = $default;
-
-		if ( 'all' == $key ) {
-			$val = $opts;
-		} elseif ( is_array( $opts ) && array_key_exists( $key, $opts ) && false !== $opts[ $key ] ) {
-			$val = $opts[ $key ];
+		return ($option && is_array($option) && $option[0]==='Yes');
+	}
+	public function field_callback( $field ) {
+		$value = get_option( $field['id'] );
+		switch ( $field['type'] ) {
+			case 'radio':
+			case 'checkbox':
+				if( ! empty ( $field['options'] ) && is_array( $field['options'] ) ) {
+					$options_markup = '';
+					$iterator = 0;
+					foreach( $field['options'] as $key => $label ) {
+						$iterator++;
+						$options_markup.= sprintf('<label for="%1$s_%6$s"><input id="%1$s_%6$s" name="%1$s[]" type="%2$s" value="%3$s" %4$s /> %5$s</label><br/>',
+							$field['id'],
+							$field['type'],
+							$key,
+							checked($value[array_search($key, $value, true)], $key, false),
+							$label,
+							$iterator
+						);
+					}
+					printf( '<fieldset>%s</fieldset>',
+						$options_markup
+					);
+				}
+				break;
+			default:
+				printf( '<input name="%1$s" id="%1$s" type="%2$s" placeholder="%3$s" value="%4$s" />',
+					$field['id'],
+					$field['type'],
+					$field['placeholder'],
+					$value
+				);
 		}
-
-		return $val;
+		if( $desc = $field['desc'] ) {
+			printf( '<p class="description">%s </p>', $desc );
+		}
 	}
 }

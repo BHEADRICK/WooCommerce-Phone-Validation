@@ -114,13 +114,7 @@ final class WooCommerce_Phone_Validation {
 	 */
 	protected static $single_instance = null;
 
-	/**
-	 * Instance of WCPV_Basic_Options
-	 *
-	 * @since0.0.1
-	 * @var WCPV_Basic_Options
-	 */
-	protected $basic_options;
+
 
 	/**
 	 * Instance of WCPV_Admin
@@ -129,6 +123,16 @@ final class WooCommerce_Phone_Validation {
 	 * @var WCPV_Admin
 	 */
 	protected $admin;
+
+	/**
+	 * Instance of WCPV_Basic_Options
+	 *
+	 * @since0.0.1
+	 * @var WCPV_Basic_Options
+	 */
+	protected $basic_options;
+
+
 
 	/**
 	 * Creates or returns an instance of this class.
@@ -162,8 +166,8 @@ final class WooCommerce_Phone_Validation {
 	 */
 	public function plugin_classes() {
 
-		$this->basic_options = new WCPV_Basic_Options( $this );
 		$this->admin = new WCPV_Admin( $this );
+		$this->basic_options = new WCPV_Basic_Options( $this );
 	} // END OF PLUGIN CLASSES FUNCTION
 
 	/**
@@ -321,6 +325,8 @@ final class WooCommerce_Phone_Validation {
 			case 'path':
 			case 'basic_options':
 			case 'admin':
+			case 'basic_options':
+			case 'basic_options':
 				return $this->$field;
 			default:
 				throw new Exception( 'Invalid ' . __CLASS__ . ' property: ' . $field );
