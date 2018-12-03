@@ -10,7 +10,12 @@
 
 ## Description ##
 
-Validates phone numbers at checkout
+Validates phone numbers at checkout. 
+
+By default, WooCommerce only validates that the phone number fields contain characters valid for a phone number, 
+but does not validate that is a proper number of digits or whether it is a real phone number. 
+
+This initial release only validates US phone numbers, but also includes optional integration with Numverify (https://numverify.com/) which supports validation for 232 countries, and has very reasonable pricing. (Free for up to 250 validations/mo).  
 
 ## Installation ##
 

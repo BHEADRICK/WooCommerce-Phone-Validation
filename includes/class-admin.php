@@ -59,7 +59,6 @@ class WCPV_Admin {
 
 					$validate = $this->numverify($_POST[$field], $key);
 
-					error_log(print_r($validate, true));
 					if(!isset($validate->error) && !$validate->valid){
 						wc_add_notice( __( "The $type Phone number you entered is invalid." ), 'error' );
 					}elseif($validate->error){
