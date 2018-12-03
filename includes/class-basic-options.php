@@ -6,7 +6,6 @@
  * @package WooCommerce_Phone_Validation
  */
 
-require_once dirname( __FILE__ ) . '/../vendor/cmb2/init.php';
 
 /**
  * WooCommerce Phone Validation Basic Options class.
