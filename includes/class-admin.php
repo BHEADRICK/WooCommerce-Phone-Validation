@@ -61,7 +61,7 @@ class WCPV_Admin {
 
 					if(!isset($validate->error) && !$validate->valid){
 						wc_add_notice( __( "The $type Phone number you entered is invalid." ), 'error' );
-					}elseif($validate->error){
+					}elseif(isset($validate->error) && $validate->error){
 						error_log(print_r($validate->error, true));
 					}
 				}
