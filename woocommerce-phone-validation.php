@@ -325,8 +325,6 @@ final class WooCommerce_Phone_Validation {
 			case 'path':
 			case 'basic_options':
 			case 'admin':
-			case 'basic_options':
-			case 'basic_options':
 				return $this->$field;
 			default:
 				throw new Exception( 'Invalid ' . __CLASS__ . ' property: ' . $field );

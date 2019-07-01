@@ -50,19 +50,25 @@ class WCPV_Admin {
 
 		foreach($fields as $field){
 			if(isset($_POST[$field])){
+				$value = $res = preg_replace("/[^0-9]/", "",  $_POST[$field] );
 				$type = $field === 'billing_phone'?'Billing':'Shipping';
-				if(!preg_match('/^^([0-9]( |-)?)?(\(?[0-9]{3}\)?|[0-9]{3})( |-)?([0-9]{3}( |-)?[0-9]{4}|[a-zA-Z0-9]{7})$$/', $_POST[$field])){
+				if(!preg_match('/^^([0-9]( |-)?)?(\(?[0-9]{3}\)?|[0-9]{3})( |-)?([0-9]{3}( |-)?[0-9]{4}|[a-zA-Z0-9]{7})$$/',$value)){
 
 					wc_add_notice( __( "The $type Phone number you entered is invalid." ), 'error' );
+					error_log('invalid phone number: ' . $value);
 				}elseif(WCPV_Basic_Options::is_active() && $key = get_option('numverify_key')){
 
 
-					$validate = $this->numverify($_POST[$field], $key);
+					$validate = $this->numverify($value, $key);
 
+					if(!$validate->valid){
+						error_log('invalid phone number: ' . $value);
+					}
 					if(!isset($validate->error) && !$validate->valid){
 						wc_add_notice( __( "The $type Phone number you entered is invalid." ), 'error' );
 					}elseif(isset($validate->error) && $validate->error){
 						error_log(print_r($validate->error, true));
+
 					}
 				}
 			}
