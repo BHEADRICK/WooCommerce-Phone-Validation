@@ -22,7 +22,7 @@ class WCPV_Basic_Options_Test extends WP_UnitTestCase {
 	 * @since  0.0.1
 	 */
 	function test_class_access() {
-		$this->assertInstanceOf( 'WCPV_Basic_Options', woocommerce_phone_validation()->basic-options );
+		$this->assertInstanceOf( 'WCPV_Basic_Options', woocommerce_phone_validation()->basic_options );
 	}
 
 	/**
