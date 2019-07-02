@@ -51,6 +51,9 @@ class WCPV_Admin {
 		foreach($fields as $field){
 			if(isset($_POST[$field])){
 				$value = $res = preg_replace("/[^0-9]/", "",  $_POST[$field] );
+				if( substr($value, 0, 1) === '1'){
+					$value = ltrim($value, '1');
+				}
 				$type = $field === 'billing_phone'?'Billing':'Shipping';
 				if(!preg_match('/^^([0-9]( |-)?)?(\(?[0-9]{3}\)?|[0-9]{3})( |-)?([0-9]{3}( |-)?[0-9]{4}|[a-zA-Z0-9]{7})$$/',$value)){
 
