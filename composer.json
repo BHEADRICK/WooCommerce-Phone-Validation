@@ -1,0 +1,11 @@
+{
+    "name": "bheadrick/woocommerce-phone-validation",
+    "type": "wordpress-plugin",
+    "authors": [
+        {
+            "name": "Bryan Headrick",
+            "email": "info@catmanstudios.com"
+        }
+    ],
+    "require": {}
+}
