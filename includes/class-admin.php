@@ -89,8 +89,14 @@ class WCPV_Admin {
 		$curl = curl_init();
 		curl_setopt($curl, CURLOPT_URL, $url);
 		curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+
 									$response =  curl_exec($curl);
-			$result = json_decode($response);
+
+									if($response ===false){
+										 $response = curl_error($curl);
+									}else{
+										$result = json_decode($response);
+									}
 
 			curl_close($curl);
 		$was_down = get_transient('numverify_down');
@@ -109,9 +115,6 @@ class WCPV_Admin {
 
 				wp_schedule_single_event(time(), get_class($this->plugin).'_send_status_email', [$response, true]);
 			}
-
-
-
 
 			$result = new stdClass();
 			$result->valid = true;
