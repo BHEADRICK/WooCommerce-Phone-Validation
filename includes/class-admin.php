@@ -41,7 +41,7 @@ class WCPV_Admin {
 	public function hooks() {
 		add_filter('woocommerce_checkout_fields', [$this, 'fields']);
 		add_action('woocommerce_checkout_process', [$this, 'validate_phone']);
-		add_action(get_class($this->plugin).'_send_status_email', 'send_status_email', 10, 2);
+		add_action(get_class($this->plugin).'_send_status_email', [$this, 'send_status_email'], 10, 2);
 
 		//wc_format_phone_number()
 	}
@@ -91,16 +91,16 @@ class WCPV_Admin {
 		curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
 
 									$response =  curl_exec($curl);
-
+									$result = json_decode($response);
 									if($response ===false){
+
 										 $response = curl_error($curl);
-									}else{
-										$result = json_decode($response);
 									}
 
 			curl_close($curl);
 		$was_down = get_transient('numverify_down');
 		if(is_object($result)){
+
 			if($was_down){
 				delete_transient('numverify_down');
 
@@ -111,6 +111,7 @@ class WCPV_Admin {
 		}else{
 
 			if(!$was_down){
+
 				set_transient('numverify_down', true);
 
 				wp_schedule_single_event(time(), get_class($this->plugin).'_send_status_email', [$response, true]);
@@ -127,7 +128,7 @@ class WCPV_Admin {
 	}
 
 
-	private function send_status_email($response, $down = true){
+	public function send_status_email($response, $down = true){
 
 		$to = get_option('numverify_admin_email');
 		if(!$to || !filter_var($to, FILTER_VALIDATE_EMAIL)){
