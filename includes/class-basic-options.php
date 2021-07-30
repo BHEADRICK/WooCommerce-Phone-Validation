@@ -132,7 +132,13 @@ class WCPV_Basic_Options {
 				'id'=>'numverify_key',
 				'type'=>'text',
 				'section' => 'phone_validation_options_section'
-			]
+			],
+            [
+                    'label'=>'Admin Email',
+                'id'=>'numverify_admin_email',
+                'section'=>'phone_validation_options_section',
+                'type'=>'text'
+            ]
 		);
 		foreach( $fields as $field ){
 			add_settings_field( $field['id'], $field['label'], array( $this, 'field_callback' ), 'phone_validation_options', $field['section'], $field );

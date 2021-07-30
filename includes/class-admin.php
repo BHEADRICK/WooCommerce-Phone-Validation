@@ -57,7 +57,7 @@ class WCPV_Admin {
 				$type = $field === 'billing_phone'?'Billing':'Shipping';
 				if(!preg_match('/^^([0-9]( |-)?)?(\(?[0-9]{3}\)?|[0-9]{3})( |-)?([0-9]{3}( |-)?[0-9]{4}|[a-zA-Z0-9]{7})$$/',$value)){
 
-					wc_add_notice( __( "The $type Phone number you entered is invalid." ), 'error' );
+					wc_add_notice( __( "The $type Phone number you entered ($value) is invalid." ), 'error' );
 					error_log('invalid phone number: ' . $value);
 				}elseif(WCPV_Basic_Options::is_active() && $key = get_option('numverify_key')){
 
@@ -68,7 +68,7 @@ class WCPV_Admin {
 						error_log('invalid phone number: ' . $value);
 					}
 					if(!isset($validate->error) && !$validate->valid){
-						wc_add_notice( __( "The $type Phone number you entered is invalid." ), 'error' );
+						wc_add_notice( __( "The $type Phone number you entered ($value) is invalid." ), 'error' );
 					}elseif(isset($validate->error) && $validate->error){
 						error_log(print_r($validate->error, true));
 
@@ -88,11 +88,61 @@ class WCPV_Admin {
 		$curl = curl_init();
 		curl_setopt($curl, CURLOPT_URL, $url);
 		curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
-		$result = json_decode( curl_exec($curl));
+									$response =  curl_exec($curl);
+			$result = json_decode($response);
 
-		curl_close($curl);
+			curl_close($curl);
+		$was_down = get_transient('numverify_down');
+		if(is_object($result)){
+			if($was_down){
+				delete_transient('numverify_down');
+				$this->send_status_email('', false);
+			}
+			error_log("numverify is up");
+			return $result;
+		}else{
+			error_log('numverify is down');
+			if(!$was_down){
+				set_transient('numverify_down', true);
+				$this->send_status_email($response);
+			}
 
-		return $result;
+
+
+
+			$result = new stdClass();
+			$result->valid = true;
+			return $result;
+		}
+
+
+
+
+	}
+
+
+	private function send_status_email($response, $down = true){
+
+		$to = get_option('numverify_admin_email');
+		if(!$to || !filter_var($to, FILTER_VALIDATE_EMAIL)){
+			$to = get_option('admin_email');
+		}
+
+
+		if($down){
+			$subject = 'NumVerify is Down';
+			$body = 'Numverify has stopped responding and is currently not validating phone numbers.<br>
+			 Orders will continue processing without phone validation until this is resolved<br>
+			 Response: ' . $response;
+		}else{
+			$subject = "NumVerify is back up";
+			$body = "Phone numbers will continue to be validated.";
+		}
+
+		$headers = array('Content-Type: text/html; charset=UTF-8');
+
+		wp_mail($to, $subject,$body, $headers);
+
 	}
 
 	public function fields($fields){
