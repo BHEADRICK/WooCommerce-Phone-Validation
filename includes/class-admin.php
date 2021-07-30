@@ -41,6 +41,7 @@ class WCPV_Admin {
 	public function hooks() {
 		add_filter('woocommerce_checkout_fields', [$this, 'fields']);
 		add_action('woocommerce_checkout_process', [$this, 'validate_phone']);
+		add_action(get_class($this->plugin).'_send_status_email', 'send_status_email', 10, 2);
 
 		//wc_format_phone_number()
 	}
@@ -96,15 +97,17 @@ class WCPV_Admin {
 		if(is_object($result)){
 			if($was_down){
 				delete_transient('numverify_down');
-				$this->send_status_email('', false);
+
+				wp_schedule_single_event(time(), get_class($this->plugin).'_send_status_email', ['', false]);
 			}
-			error_log("numverify is up");
+
 			return $result;
 		}else{
-			error_log('numverify is down');
+
 			if(!$was_down){
 				set_transient('numverify_down', true);
-				$this->send_status_email($response);
+
+				wp_schedule_single_event(time(), get_class($this->plugin).'_send_status_email', [$response, true]);
 			}
 
 
